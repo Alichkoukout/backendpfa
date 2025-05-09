@@ -1,13 +1,12 @@
 package com.example.authapp.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 
-import com.example.authapp.dto.LoginRequest;
-import com.example.authapp.dto.RegisterRequest;
+import com.example.authapp.exception.EmailAlreadyExistsException;
+import com.example.authapp.exception.PasswordMismatchException;
 import com.example.authapp.model.User;
 import com.example.authapp.repository.UserRepository;
 
@@ -19,22 +18,33 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public ResponseEntity<String> signup(RegisterRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("Email already exists!");
+    public User signup(User user) {
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException("Email already exists: " + user.getEmail());
         }
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        userRepository.save(user);
-        return ResponseEntity.ok("User registered!");
+        
+        if (user.getPassword() == null || user.getConfirmPassword() == null) {
+            throw new PasswordMismatchException("Password and confirm password are required");
+        }
+        
+        if (!user.getPassword().equals(user.getConfirmPassword())) {
+            throw new PasswordMismatchException("Password and confirm password do not match");
+        }
+        
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
+
     }
 
-    public ResponseEntity<String> login(LoginRequest request) {
-        Optional<User> user = userRepository.findByEmail(request.getEmail());
-        if (user.isEmpty() || !passwordEncoder.matches(request.getPassword(), user.get().getPassword())) {
-            return ResponseEntity.status(401).body("Invalid credentials!");
+    public Optional<User> login(User loginUser) {
+        Optional<User> user = userRepository.findByEmail(loginUser.getEmail());
+        if (user.isEmpty() || !passwordEncoder.matches(loginUser.getPassword(), user.get().getPassword())) {
+            throw new PasswordMismatchException("Invalid credentials!");
         }
-        return ResponseEntity.ok("Login successful!");
+        return user;
     }
+
+
+
+
 }

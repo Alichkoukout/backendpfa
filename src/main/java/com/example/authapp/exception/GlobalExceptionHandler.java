@@ -18,4 +18,14 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         return ResponseEntity.badRequest().body(errorMessage);
     }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<String> handleEmailAlreadyExistsException(EmailAlreadyExistsException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler(PasswordMismatchException.class)
+    public ResponseEntity<String> handlePasswordMismatchException(PasswordMismatchException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
 }
