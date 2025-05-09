@@ -14,4 +14,9 @@ public class User {
     private String email;
     
     private String password;
+
+    private String name;
+
+    @Transient // This field won't be persisted to the database
+    private String confirmPassword;
 }

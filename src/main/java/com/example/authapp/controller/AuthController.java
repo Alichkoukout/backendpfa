@@ -1,19 +1,18 @@
 package com.example.authapp.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
-import com.example.authapp.dto.LoginRequest;
-import com.example.authapp.dto.RegisterRequest;
+import com.example.authapp.model.User;
 import com.example.authapp.service.AuthService;
+
+import java.util.Optional;
+
 //api
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(value ="3000")
 public class AuthController {
     @Autowired
     private AuthService authService;
@@ -22,12 +21,12 @@ public class AuthController {
 
     //endpoint
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@Valid @RequestBody RegisterRequest request) {
-        return authService.signup(request);
+    public User signup(@Valid @RequestBody User user) {
+        return authService.signup(user);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
-        return authService.login(request);
+    public Optional<User> login(@Valid @RequestBody User user) {
+        return authService.login(user);
     }
 }
