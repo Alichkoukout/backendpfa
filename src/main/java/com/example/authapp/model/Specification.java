@@ -1,10 +1,10 @@
 package com.example.authapp.model;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -25,6 +25,14 @@ public class Specification {
     private String budget;
     private String timeline;
     private String technicalRequirements;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "specification_id")
