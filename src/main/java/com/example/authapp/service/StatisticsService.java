@@ -45,6 +45,7 @@ public class StatisticsService {
         } catch (Exception e) {
             statistics.put("status", "error");
             statistics.put("message", "Error calculating statistics: " + e.getMessage());
+            System.err.println(e);
         }
         
         return statistics;
