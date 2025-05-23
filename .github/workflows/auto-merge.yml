@@ -12,9 +12,10 @@ jobs:
   auto-merge:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout main branch
         uses: actions/checkout@v3
         with:
+          ref: main
           fetch-depth: 0
           token: ${{ secrets.MERGE_TOKEN }}
           
@@ -23,31 +24,42 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
-      - name: Direct merge to main when no conflicts
+      - name: Fetch and merge feature branch
         run: |
           CURRENT_BRANCH=${GITHUB_REF#refs/heads/}
-          echo "Current branch: $CURRENT_BRANCH"
+          echo "Attempting to merge branch: $CURRENT_BRANCH into main"
           
-          # Fetch the latest main branch
-          git fetch origin main
+          # Fetch the feature branch
+          git fetch origin $CURRENT_BRANCH
           
-          # Check if there are conflicts
-          if git merge-tree $(git merge-base FETCH_HEAD $CURRENT_BRANCH) FETCH_HEAD $CURRENT_BRANCH | grep -e "^<<<<<<<" -e "^>>>>>>>" -e "^=======$"; then
-            echo "Conflicts detected, manual merge required"
-            exit 0
-          else
-            echo "No conflicts detected, proceeding with direct merge"
+          # Create a temporary merge commit to test for conflicts
+          echo "Testing merge for conflicts..."
+          if git merge --no-commit --no-ff origin/$CURRENT_BRANCH; then
+            # No conflicts, complete the merge
+            echo "✅ No conflicts detected, completing merge"
+            git commit -m "Auto-merge $CURRENT_BRANCH into main
+
+            This merge was automatically performed by GitHub Actions.
+            Branch: $CURRENT_BRANCH
+            Commit: ${{ github.sha }}"
             
-            # Checkout main branch
-            git checkout main
-            
-            # Merge the feature branch
-            git merge --no-ff $CURRENT_BRANCH -m "Auto-merge $CURRENT_BRANCH into main"
-            
-            # Push the changes to main
+            # Push to main
             git push origin main
+            echo "🎉 Successfully merged $CURRENT_BRANCH into main"
             
-            echo "Successfully merged $CURRENT_BRANCH into main"
+          else
+            # Conflicts detected, abort and handle gracefully
+            echo "❌ Merge conflicts detected"
+            git merge --abort
+            
+            echo "## ⚠️ Auto-merge Failed" >> $GITHUB_STEP_SUMMARY
+            echo "**Branch:** \`$CURRENT_BRANCH\`" >> $GITHUB_STEP_SUMMARY
+            echo "**Reason:** Merge conflicts detected" >> $GITHUB_STEP_SUMMARY
+            echo "**Action Required:** Please create a Pull Request and resolve conflicts manually" >> $GITHUB_STEP_SUMMARY
+            
+            # Don't fail the workflow, just skip the merge
+            echo "Merge skipped due to conflicts. Manual intervention required."
+            exit 0
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.MERGE_TOKEN }}
