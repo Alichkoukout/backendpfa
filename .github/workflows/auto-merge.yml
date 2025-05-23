@@ -23,7 +23,11 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
+<<<<<<< HEAD
+      - name: Attempt merge to main
+=======
       - name: Direct merge to main when no conflicts
+>>>>>>> 989313329f29e61477ceb64d0e82c34cb099e9d9
         run: |
           CURRENT_BRANCH=${GITHUB_REF#refs/heads/}
           echo "Current branch: $CURRENT_BRANCH"
@@ -31,6 +35,31 @@ jobs:
           # Fetch the latest main branch
           git fetch origin main
           
+<<<<<<< HEAD
+          # Checkout main branch
+          git checkout main
+          
+          # Attempt merge and capture exit code
+          if git merge --no-ff $CURRENT_BRANCH -m "Auto-merge $CURRENT_BRANCH into main"; then
+            echo "Merge successful, pushing changes"
+            git push origin main
+            echo "Successfully merged $CURRENT_BRANCH into main"
+          else
+            echo "Merge conflicts detected. Manual intervention required."
+            echo "Please resolve conflicts manually and merge through a Pull Request."
+            
+            # Reset to clean state
+            git merge --abort
+            
+            # Optionally, create a Pull Request comment or issue
+            echo "❌ Auto-merge failed due to conflicts in branch $CURRENT_BRANCH" >> $GITHUB_STEP_SUMMARY
+            echo "Please resolve conflicts manually and create a Pull Request." >> $GITHUB_STEP_SUMMARY
+            
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.MERGE_TOKEN }}
+=======
           # Check if there are conflicts
           if git merge-tree $(git merge-base FETCH_HEAD $CURRENT_BRANCH) FETCH_HEAD $CURRENT_BRANCH | grep -e "^<<<<<<<" -e "^>>>>>>>" -e "^=======$"; then
             echo "Conflicts detected, manual merge required"
@@ -51,3 +80,4 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.MERGE_TOKEN }}
+>>>>>>> 989313329f29e61477ceb64d0e82c34cb099e9d9
